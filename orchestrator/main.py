@@ -3,6 +3,9 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Any
 import uuid
+import httpx
+
+REPOSITORY_URL = "http://repository:8001"
 
 app = FastAPI(title="ComposureCI Orchestrator", version="0.1.0")
 
@@ -25,6 +28,33 @@ async def root():
 @app.get("/api/v1/health")
 async def health():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.get("/api/v1/health/full")
+async def full_health():
+    """Health check that includes repository service"""
+    repository_status = "unknown"
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{REPOSITORY_URL}/api/v1/health", timeout=5.0)
+            if response.status_code == 200:
+                repository_status = "healthy"
+                repository_data = response.json()
+            else:
+                repository_status = f"error_{response.status_code}"
+                repository_data = {}
+    except Exception as e:
+        repository_status = f"connection_error: {str(e)}"
+        repository_data = {}
+    
+    return {
+        "repository": {
+            "status": repository_status,
+            "data": repository_data if repository_status == "healthy" else None
+        },
+        "overall_status": "healthy" if repository_status == "healthy" else "degraded"
+    }
+
 
 @app.post("/api/v1/compose", response_model=ComposeResponse)
 async def compose_services(request: ComposeRequest):
