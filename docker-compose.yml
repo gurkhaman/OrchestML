@@ -1,16 +1,37 @@
-version: '3.8'
 services:
   jenkins:
     image: jenkins/jenkins:lts
     container_name: composureci-jenkins
     ports:
       - "8080:8080"
-      - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-    environment:
-      - JENKINS_OPTS=--httpPort=8080
-    restart: unless-stopped
+    networks:
+      - composure-net
+      
+  orchestrator:
+    build: 
+      context: .
+      dockerfile: orchestrator/Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - composure-net
+    depends_on:
+      - repository
+      
+  repository:
+    build:
+      context: .
+      dockerfile: repository-service/Dockerfile
+    ports:
+      - "8001:8001"
+    networks:
+      - composure-net
+
+networks:
+  composure-net:
+    driver: bridge
 
 volumes:
   jenkins_home:
