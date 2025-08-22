@@ -21,4 +21,5 @@ build-backend = "uv_build"
 members = [
     "repository-service",
     "monitoring-service",
+    "orchestrator",
 ]
