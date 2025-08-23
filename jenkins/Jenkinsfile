@@ -26,11 +26,51 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     echo "Vectorstore Startup Response: ${startupResponse}"
-
-                    if (startupStatus != 'success') {
-                        error("Vectorstore startup failed with status: ${startupStatus}")
+                    
+                    // Parse startup response and validate
+                    if (!startupResponse.contains('success')) {
+                        error("Vectorstore startup failed. Response: ${startupResponse}")
                     }
-                    echo "Vectorstore startup verified: ${startupStatus}"
+                    echo "Vectorstore startup verified successfully"
+                    
+                    // Test search endpoint (new RAG functionality)
+                    def searchResponse = sh(
+                        script: '''
+                            curl -s -X POST http://orchestrator:8000/api/v1/search \
+                              -H "Content-Type: application/json" \
+                              -d '{"query": "object detection", "k": 3}'
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    echo "Search Response: ${searchResponse}"
+                    
+                    // Validate search response contains expected fields
+                    if (!searchResponse.contains('query') || !searchResponse.contains('results') || !searchResponse.contains('total_results')) {
+                        error("Search response missing required fields. Response: ${searchResponse}")
+                    }
+                    echo "Search endpoint validated successfully"
+                    
+                    // Test RAG endpoint with simple_composition prompt
+                    def ragResponse = sh(
+                        script: '''
+                            curl -s -X POST http://orchestrator:8000/api/v1/rag \
+                              -H "Content-Type: application/json" \
+                              -d '{"question": "I need object detection service", "prompt_name": "simple_composition"}'
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    echo "RAG Response: ${ragResponse}"
+                    
+                    // Validate RAG response contains expected fields
+                    if (!ragResponse.contains('status') || !ragResponse.contains('question') || !ragResponse.contains('answer')) {
+                        error("RAG response missing required fields. Response: ${ragResponse}")
+                    }
+                    
+                    // Check if RAG was successful
+                    if (!ragResponse.contains('"status":"success"')) {
+                        error("RAG request failed. Response: ${ragResponse}")
+                    }
+                    echo "RAG endpoint validated successfully"
                     
                     // Test composition endpoint
                     def response = sh(
@@ -42,6 +82,12 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     echo "Composition Response: ${response}"
+                    
+                    // Validate composition response
+                    if (!response.contains('composition_id') || !response.contains('status') || !response.contains('services')) {
+                        error("Composition response missing required fields. Response: ${response}")
+                    }
+                    echo "Composition endpoint validated successfully"
                 }
             }
         }
