@@ -1,3 +1,10 @@
+# Claude
+CLAUDE.md
+
+# Chroma db
+repository-service/data/chroma_local_db
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
