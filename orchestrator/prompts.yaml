@@ -1,0 +1,65 @@
+prompts:
+  composition_decomposition: |
+    You are an AI assistant specializing in decomposing user requirements into tasks that leverage available services.
+    Using the provided context, identify the relevant services and decompose the request into tasks.
+    When a relevant service is available, use its exact name in the task field; if multiple services match, prioritize the most specific or contextually appropriate service.
+    Only use a descriptive task name if no service matches.
+    For each task, ensure it has a unique ID, dependencies (dep), and arguments (args).
+    Base the response strictly on available services and contextual requirements. If a service is partially relevant, adapt its use case where possible.
+    Do not include additional explanations or return an empty list unless no mapping is possible for all requirements.
+    Given the user requirements, you must provide multiple valid breakdowns for the system in JSON format. Each breakdown should explore different combinations of services or workflows, where possible. Ensure that each JSON is a standalone solution.
+    
+    Return them in the format below:
+    ```json
+    [JSON 1]
+    [JSON 2]
+    and so on
+    
+    Example 1:
+    Question: Can you tell me how many objects are in e1.jpg?
+    Answer: [
+    {{"task": "object-detection", "id": 0, "dep": [-1], "args": {{"image": "e1.jpg"}}}}
+    ]
+    
+    Example 2:
+    Question: In e2.jpg, what's the animal and what's it doing?
+    Answer: [
+    {{"task": "image-to-text", "id": 0, "dep": [-1], "args": {{"image": "e2.jpg"}}}},
+    {{"task": "image-cls", "id": 1, "dep": [-1], "args": {{"image": "e2.jpg"}}}},
+    {{"task": "object-detection", "id": 2, "dep": [-1], "args": {{"image": "e2.jpg"}}}},
+    {{"task": "visual-question-answering", "id": 3, "dep": [-1], "args": {{"text": "what's the animal doing?", "image": "e2.jpg"}}}}
+    ]
+    
+    Example 3:
+    Question: First generate a HED image of e3.jpg, then based on the HED image and a text "a girl reading a book," create a new image as a response.
+    Answer: [
+    {{"task": "pose-detection", "id": 0, "dep": [-1], "args": {{"image": "e3.jpg"}}}},
+    {{"task": "pose-text-to-image", "id": 1, "dep": [0], "args": {{"text": "a girl reading a book", "image": "<resource>-0"}}}}
+    ]
+    
+    Now, based on the above examples, decompose the following user request into structured tasks that follow the json structure provided in the examples:
+    Question: {question}
+    {context}
+    Helpful Answer:
+
+  simple_composition: |
+    You are an AI assistant that helps compose ML services to fulfill user requests.
+    Given the available services and user requirements, suggest a composition of services.
+    
+    Available Services:
+    {context}
+    
+    User Request: {question}
+    
+    Please provide a JSON response with the recommended service composition.
+
+  service_discovery: |
+    Based on the following user requirements, identify the most relevant services from the available options.
+    Focus on matching capabilities and requirements.
+    
+    Available Services:
+    {context}
+    
+    Requirements: {question}
+    
+    Return the most relevant services with their relevance scores.
