@@ -85,6 +85,26 @@ async def get_composition(composition_id: str):
         return {"error": "Composition not found"}, 404
     return compositions[composition_id]
 
+@app.post("/api/v1/vector-store/startup")
+async def initialize_repository():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{REPOSITORY_URL}/api/v1/vector-store/startup")
+            
+            if response.status_code == 200:
+            # TODO: fix whatever this is
+               print("Hurray") 
+                
+            else:
+                return{
+                    "status": "error"
+                }
+    except Exception as e:
+        return {
+            "status": "connection error",
+            "message": f"Failed to connect to repository service: {str(e)}"
+        }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
