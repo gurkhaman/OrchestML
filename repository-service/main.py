@@ -1,10 +1,24 @@
 from fastapi import FastAPI, HTTPException, status
 from datetime import datetime
+from pydantic import BaseModel
 from vectorstore import VectorStoreManager
 
 app = FastAPI(title="ComposureCI Repository", version="0.1.0")
 
 vs_manager = VectorStoreManager()
+
+class SearchRequest(BaseModel):
+    query: str
+    k: int = 4
+
+class SearchResult(BaseModel):
+    content: str
+    metadata: dict
+
+class SearchResponse(BaseModel):
+    query: str
+    results: list[SearchResult]
+    total_results: int
 
 @app.get("/")
 async def root():
@@ -52,7 +66,43 @@ async def startup():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to initialize vectorstore: {str(e)}"
         )
-            
+
+@app.post("/api/v1/vector-store/search", response_model=SearchResponse)
+async def search_services(request: SearchRequest):
+    if not request.query.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Query cannot be empty"
+        )
+    
+    if not vs_manager.vectorstore:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Vector store not initialized. Call /api/v1/vector-store/startup first"
+        )
+    
+    try:
+        docs = vs_manager.search(request.query, k=request.k)
+        
+        results = [
+            SearchResult(
+                content=doc.page_content,
+                metadata=doc.metadata
+            )
+            for doc in docs
+        ]
+        
+        return SearchResponse(
+            query=request.query,
+            results=results,
+            total_results=len(results)
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Search failed: {str(e)}"
+        )
 
 
 if __name__ == "__main__":
