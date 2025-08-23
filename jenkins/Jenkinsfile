@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+    stages {
+        stage('Test ComposureCI API') {
+            steps {
+                script {
+                    echo "Testing ComposureCI Orchestrator..."
+                    
+                    // Test orchestrator health
+                    def health = sh(
+                        script: 'curl -s http://orchestrator:8000/api/v1/health',
+                        returnStdout: true
+                    ).trim()
+                    echo "Orchestrator Health: ${health}"
+                    
+                    // Test full system health (orchestrator → repository)
+                    def fullHealth = sh(
+                        script: 'curl -s http://orchestrator:8000/api/v1/health/full',
+                        returnStdout: true
+                    ).trim()
+                    echo "Full System Health: ${fullHealth}"
+                    
+                    // Test vectorstore startup
+                    def startupResponse = sh(
+                        script: 'curl -s -X POST http://orchestrator:8000/api/v1/vector-store/startup',
+                        returnStdout: true
+                    ).trim()
+                    echo "Vectorstore Startup Response: ${startupResponse}"
+
+                    if (startupStatus != 'success') {
+                        error("Vectorstore startup failed with status: ${startupStatus}")
+                    }
+                    echo "Vectorstore startup verified: ${startupStatus}"
+                    
+                    // Test composition endpoint
+                    def response = sh(
+                        script: '''
+                            curl -s -X POST http://orchestrator:8000/api/v1/compose \
+                              -H "Content-Type: application/json" \
+                              -d '{"requirements": "deliver book to Joe using speech and face recognition", "constraints": {"device": "turtlebot"}}'
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    echo "Composition Response: ${response}"
+                }
+            }
+        }
+    }
+}
