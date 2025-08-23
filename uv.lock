@@ -1523,12 +1523,16 @@ source = { virtual = "orchestrator" }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "httpx" },
+    { name = "langchain-core" },
+    { name = "langchain-openai" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.116.1" },
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "langchain-core", specifier = ">=0.3.74" },
+    { name = "langchain-openai", specifier = ">=0.3.31" },
 ]
 
 [[package]]
