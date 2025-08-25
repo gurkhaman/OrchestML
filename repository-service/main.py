@@ -2,8 +2,32 @@ from fastapi import FastAPI, HTTPException, status
 from datetime import datetime
 from pydantic import BaseModel
 from vectorstore import VectorStoreManager
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="ComposureCI Repository", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup phase
+    print("Repository service starting up...")
+    try:
+        print("Initializing vector store...")
+        initialized = vs_manager.initialize_vectorstore()
+        if initialized:
+            print(f"Successfully loaded existing vectorstore from {vs_manager.persist_dir}")
+        else:
+            print(f"No existing vectorstore found at {vs_manager.persist_dir}")
+            print("Attempting to create new vectorstore from markdown files...")
+            documents_loaded = vs_manager.create_new_vectorstore()
+            print(f"Successfully created vectorstore with {documents_loaded} documents")
+    except Exception as e:
+        print(f"Warning: Vector store initialization failed: {e}")
+        print("Service will start but vector store will be unavailable")
+
+    yield  # Service runs here
+
+    # Shutdown phase (optional cleanup)
+    print("Repository service shutting down...")
+
+app = FastAPI(title="ComposureCI Repository", version="0.1.0", lifespan=lifespan)
 
 vs_manager = VectorStoreManager()
 
@@ -42,31 +66,6 @@ async def health():
         }
     }
 
-@app.post("/api/v1/vector-store/startup", status_code=status.HTTP_200_OK)
-async def startup():
-    try:
-        initialized = vs_manager.initialize_vectorstore()
-        
-        if initialized:
-            print(f"Successfully loaded existing vectorstore from {vs_manager.persist_dir}")
-            return {
-                "status": "success",
-                "message": "Successfully loaded existing vectorstore from {vs_manager.persist_dir}",
-            }
-        else:
-            print(f"No existing vectorstore found at {vs_manager.persist_dir}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No existing vectorstore found"
-            )
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to initialize vectorstore: {str(e)}"
-        )
-
 @app.post("/api/v1/vector-store/search", response_model=SearchResponse)
 async def search_services(request: SearchRequest):
     if not request.query.strip():
@@ -78,7 +77,7 @@ async def search_services(request: SearchRequest):
     if not vs_manager.vectorstore:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Vector store not initialized. Call /api/v1/vector-store/startup first"
+            detail="Vector store not initialized. Please check service startup logs for initialization errors."
         )
     
     try:
@@ -107,4 +106,4 @@ async def search_services(request: SearchRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
