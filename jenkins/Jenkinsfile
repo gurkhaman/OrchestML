@@ -1,93 +1,140 @@
 pipeline {
     agent any
+
+    environment {
+        ORCHESTRATOR_URL = 'http://orchestrator:8000'
+        REPOSITORY_URL = 'http://repository:8001'
+        TIMEOUT = '45'
+        SEARCH_QUERY = 'object detection'
+        RAG_QUESTION = 'I need object detection service'
+        COMPOSITION_REQUIREMENTS = 'deliver book to Joe using speech and face recognition'
+    }
+
     stages {
-        stage('Test ComposureCI API') {
+        stage('Health Checks') {
+            parallel {
+                stage('Orchestrator Health') {
+                    steps {
+                        script {
+                            echo "Testing Orchestrator Health..."
+                            def health = sh(
+                                script: "curl -s --max-time ${TIMEOUT} ${ORCHESTRATOR_URL}/api/v1/health",
+                                returnStdout: true
+                            ).trim()
+                            echo "Orchestrator Health: ${health}"
+
+                            if (!health.contains('"status":"healthy"')) {
+                                error("Orchestrator health check failed. Response: ${health}")
+                            }
+                            echo "✓ Orchestrator health check passed"
+                        }
+                    }
+                }
+
+                stage('Repository Health') {
+                    steps {
+                        script {
+                            echo "Testing Repository Health..."
+                            def health = sh(
+                                script: "curl -s --max-time ${TIMEOUT} ${REPOSITORY_URL}/",
+                                returnStdout: true
+                            ).trim()
+                            echo "Repository Health: ${health}"
+
+                            if (!health.contains('"status":"running"')) {
+                                error("Repository health check failed. Response: ${health}")
+                            }
+                            echo "✓ Repository health check passed"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Core API Tests') {
+            parallel {
+                stage('Search Endpoint') {
+                    steps {
+                        script {
+                            echo "Testing Search Endpoint..."
+                            def searchResponse = sh(
+                                script: """
+                                    curl -s --max-time ${TIMEOUT} -X POST ${ORCHESTRATOR_URL}/api/v1/search \
+                                      -H "Content-Type: application/json" \
+                                      -d '{"query": "${SEARCH_QUERY}", "k": 3}'
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            echo "Search Response: ${searchResponse}"
+
+                            if (!searchResponse.contains('"query"') || !searchResponse.contains('"results"') || !searchResponse.contains('"total_results"')) {
+                                error("Search response missing required fields. Response: ${searchResponse}")
+                            }
+                            echo "✓ Search endpoint validated successfully"
+                        }
+                    }
+                }
+
+                stage('RAG Endpoint') {
+                    steps {
+                        script {
+                            echo "Testing RAG Endpoint..."
+                            def ragResponse = sh(
+                                script: """
+                                    curl -s --max-time ${TIMEOUT} -X POST ${ORCHESTRATOR_URL}/api/v1/rag \
+                                      -H "Content-Type: application/json" \
+                                      -d '{"question": "${RAG_QUESTION}", "prompt_name": "simple_composition"}'
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            echo "RAG Response: ${ragResponse}"
+
+                            if (!ragResponse.contains('"status"') || !ragResponse.contains('"question"') || !ragResponse.contains('"answer"')) {
+                                error("RAG response missing required fields. Response: ${ragResponse}")
+                            }
+                            if (!ragResponse.contains('"status":"success"')) {
+                                error("RAG request failed. Response: ${ragResponse}")
+                            }
+                            echo "✓ RAG endpoint validated successfully"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Integration Tests') {
             steps {
                 script {
-                    echo "Testing ComposureCI Orchestrator..."
-                    
-                    // Test orchestrator health
-                    def health = sh(
-                        script: 'curl -s http://orchestrator:8000/api/v1/health',
-                        returnStdout: true
-                    ).trim()
-                    echo "Orchestrator Health: ${health}"
-                    
-                    // Test full system health (orchestrator → repository)
+                    echo "Testing Full System Health..."
                     def fullHealth = sh(
-                        script: 'curl -s http://orchestrator:8000/api/v1/health/full',
+                        script: "curl -s --max-time ${TIMEOUT} ${ORCHESTRATOR_URL}/api/v1/health/full",
                         returnStdout: true
                     ).trim()
                     echo "Full System Health: ${fullHealth}"
-                    
-                    // Test vectorstore startup
-                    def startupResponse = sh(
-                        script: 'curl -s -X POST http://orchestrator:8000/api/v1/vector-store/startup',
-                        returnStdout: true
-                    ).trim()
-                    echo "Vectorstore Startup Response: ${startupResponse}"
-                    
-                    // Parse startup response and validate
-                    if (!startupResponse.contains('success')) {
-                        error("Vectorstore startup failed. Response: ${startupResponse}")
+
+                    if (!fullHealth.contains('"status":"healthy"')) {
+                        error("Full system health check failed. Response: ${fullHealth}")
                     }
-                    echo "Vectorstore startup verified successfully"
-                    
-                    // Test search endpoint (new RAG functionality)
-                    def searchResponse = sh(
-                        script: '''
-                            curl -s -X POST http://orchestrator:8000/api/v1/search \
-                              -H "Content-Type: application/json" \
-                              -d '{"query": "object detection", "k": 3}'
-                        ''',
-                        returnStdout: true
-                    ).trim()
-                    echo "Search Response: ${searchResponse}"
-                    
-                    // Validate search response contains expected fields
-                    if (!searchResponse.contains('query') || !searchResponse.contains('results') || !searchResponse.contains('total_results')) {
-                        error("Search response missing required fields. Response: ${searchResponse}")
-                    }
-                    echo "Search endpoint validated successfully"
-                    
-                    // Test RAG endpoint with simple_composition prompt
-                    def ragResponse = sh(
-                        script: '''
-                            curl -s -X POST http://orchestrator:8000/api/v1/rag \
-                              -H "Content-Type: application/json" \
-                              -d '{"question": "I need object detection service", "prompt_name": "simple_composition"}'
-                        ''',
-                        returnStdout: true
-                    ).trim()
-                    echo "RAG Response: ${ragResponse}"
-                    
-                    // Validate RAG response contains expected fields
-                    if (!ragResponse.contains('status') || !ragResponse.contains('question') || !ragResponse.contains('answer')) {
-                        error("RAG response missing required fields. Response: ${ragResponse}")
-                    }
-                    
-                    // Check if RAG was successful
-                    if (!ragResponse.contains('"status":"success"')) {
-                        error("RAG request failed. Response: ${ragResponse}")
-                    }
-                    echo "RAG endpoint validated successfully"
-                    
-                    // Test composition endpoint
+                    echo "✓ Full system health check passed"
+
+                    echo "Testing Composition Endpoint..."
                     def response = sh(
-                        script: '''
-                            curl -s -X POST http://orchestrator:8000/api/v1/compose \
+                        script: """
+                            curl -s --max-time ${TIMEOUT} -X POST ${ORCHESTRATOR_URL}/api/v1/compose \
                               -H "Content-Type: application/json" \
-                              -d '{"requirements": "deliver book to Joe using speech and face recognition", "constraints": {"device": "turtlebot"}}'
-                        ''',
+                              -d '{"requirements": "${COMPOSITION_REQUIREMENTS}", "constraints": {"device": "turtlebot"}}'
+                        """,
                         returnStdout: true
                     ).trim()
                     echo "Composition Response: ${response}"
-                    
-                    // Validate composition response
-                    if (!response.contains('composition_id') || !response.contains('status') || !response.contains('services')) {
+
+                    if (!response.contains('"composition_id"') || !response.contains('"status"') || !response.contains('"services"')) {
                         error("Composition response missing required fields. Response: ${response}")
                     }
-                    echo "Composition endpoint validated successfully"
+                    if (!response.contains('"status":"success"')) {
+                        error("Composition request failed. Response: ${response}")
+                    }
+                    echo "✓ Composition endpoint validated successfully"
                 }
             }
         }
