@@ -16,7 +16,7 @@ REPOSITORY_URL = "http://repository:8001"
 
 # Initialize LangChain components
 config = dotenv_values(".env")
-llm = ChatOpenAI(model_name="gpt-4o", temperature=0, api_key=config.get("OPENAI_API_KEY"))
+llm = ChatOpenAI(model="gpt-5-mini-2025-08-07", temperature=0, api_key=config.get("OPENAI_API_KEY"))
 
 # Load prompts from YAML
 def load_prompts():
@@ -119,7 +119,7 @@ async def compose_services(request: ComposeRequest):
     
     composition = {
         "composition_id": composition_id,
-        "status": "created",
+        "status": "success",
         "services": mock_services,
         "created_at": datetime.now().isoformat(),
         "requirements": request.requirements,
@@ -135,27 +135,6 @@ async def get_composition(composition_id: str):
     if composition_id not in compositions:
         return {"error": "Composition not found"}, 404
     return compositions[composition_id]
-
-@app.post("/api/v1/vector-store/startup")
-async def initialize_repository():
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(f"{REPOSITORY_URL}/api/v1/vector-store/startup")
-            
-            if response.status_code == 200:
-                return {
-                    "status": "success",
-                    "message": "Vector store initialized successfully"
-                }
-            else:
-                return{
-                    "status": "error"
-                }
-    except Exception as e:
-        return {
-            "status": "connection error",
-            "message": f"Failed to connect to repository service: {str(e)}"
-        }
 
 @app.post("/api/v1/search")
 async def search_repository(request: dict):
@@ -194,4 +173,4 @@ async def rag_endpoint(request: RAGRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
