@@ -10,22 +10,30 @@ services:
       - composure-net
       
   orchestrator:
-    build: 
+    build:
       context: .
       dockerfile: orchestrator/Dockerfile
     ports:
       - "8000:8000"
+    volumes:
+      - ./orchestrator:/app
     networks:
       - composure-net
+    environment:
+      - UV_LINK_MODE=copy
     depends_on:
       - repository
-      
+
   repository:
     build:
       context: .
       dockerfile: repository-service/Dockerfile
     ports:
       - "8001:8001"
+    volumes:
+      - ./repository-service:/app
+    environment:
+      - UV_LINK_MODE=copy
     networks:
       - composure-net
 
