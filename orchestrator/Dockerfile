@@ -1,5 +1,10 @@
 FROM python:3.13.6-slim
 WORKDIR /app
+
+# Copy dependency files first for better layer caching
+COPY orchestrator/pyproject.toml ./
+RUN pip install uv && uv sync --no-dev
+
+# Copy source code (will be overridden by volume mount in development)
 COPY orchestrator/ .
-RUN pip install uv && uv sync
 CMD ["uv", "run", "python", "main.py"]
