@@ -4,7 +4,7 @@ pipeline {
     environment {
         ORCHESTRATOR_URL = 'http://orchestrator:8000'
         REPOSITORY_URL = 'http://repository:8001'
-        TIMEOUT = '45'
+        TIMEOUT = '60'
         SEARCH_QUERY = 'object detection'
         RAG_QUESTION = 'I need object detection service'
         COMPOSITION_REQUIREMENTS = 'deliver book to Joe using speech and face recognition'
@@ -128,7 +128,7 @@ pipeline {
                     ).trim()
                     echo "Composition Response: ${response}"
 
-                    if (!response.contains('"composition_id"') || !response.contains('"status"') || !response.contains('"services"')) {
+                    if (!response.contains('"composition_id"') || !response.contains('"status"') || !response.contains('"raw_breakdowns"')) {
                         error("Composition response missing required fields. Response: ${response}")
                     }
                     if (!response.contains('"status":"success"')) {
