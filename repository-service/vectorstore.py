@@ -82,7 +82,7 @@ class VectorStoreManager:
             raise ValueError("Vector store not initialized")
         
         retriever = self.vectorstore.as_retriever(search_kwargs={"k": k})
-        docs = retriever.get_relevant_documents(query)
+        docs = retriever.invoke(query)
         return docs
     
     def get_status(self):
