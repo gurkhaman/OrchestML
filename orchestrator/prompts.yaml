@@ -1,45 +1,74 @@
 prompts:
   composition_decomposition: |
-    You are an AI assistant specializing in decomposing user requirements into tasks that leverage available services.
-    Using the provided context, identify the relevant services and decompose the request into tasks.
-    When a relevant service is available, use its exact name in the task field; if multiple services match, prioritize the most specific or contextually appropriate service.
-    Only use a descriptive task name if no service matches.
-    For each task, ensure it has a unique ID, dependencies (dep), and arguments (args).
-    Base the response strictly on available services and contextual requirements. If a service is partially relevant, adapt its use case where possible.
-    Do not include additional explanations or return an empty list unless no mapping is possible for all requirements.
-    Given the user requirements, you must provide multiple valid breakdowns for the system in JSON format. Each breakdown should explore different combinations of services or workflows, where possible. Ensure that each JSON is a standalone solution.
+    You are an AI assistant that composes task workflows using ONLY the services available in the provided context.
+
+    CRITICAL RULES:
+    1. Use ONLY services explicitly mentioned in the context below
+    2. Generate 1-3 alternative compositions maximum
+    3. Each task must use a service name that appears in the context
+    4. If no suitable services exist, return empty alternatives array
+    5. Base task arguments on user requirements, not example patterns
+
+    CONTEXT-DRIVEN ANALYSIS:
+    - First, identify relevant services from the context that match user needs
+    - Then, compose workflows using only those identified services
+    - Prioritize the most specific/appropriate services for the task
+
+
+    User Requirements: {question}
+
+    Example 1 - Image Analysis Request:
+    User: "Analyze the contents of <input_image>"
+    Context contains: object-detection, image-classification, scene-understanding
     
-    Return them in the format below:
-    ```json
-    [JSON 1]
-    [JSON 2]
-    and so on
+    Response: {{
+      "alternatives": [
+        {{
+          "tasks": [
+            {{"task": "object-detection", "id": 0, "dep": [-1], "args": {{"image": "<input_image>"}}}}
+          ]
+        }},
+        {{
+          "tasks": [
+            {{"task": "image-classification", "id": 0, "dep": [-1], "args": {{"image": "<input_image>"}}}},
+            {{"task": "object-detection", "id": 1, "dep": [-1], "args": {{"image": "<input_image>"}}}}
+          ]
+        }}
+      ]
+    }}
+
+    Example 2 - Text Processing Request:
+    User: "Summarize this document: <input_document>"
+    Context contains: text-summarization, document-analysis
     
-    Example 1:
-    Question: Can you tell me how many objects are in e1.jpg?
-    Answer: [
-    {{"task": "object-detection", "id": 0, "dep": [-1], "args": {{"image": "e1.jpg"}}}}
-    ]
+    Response: {{
+      "alternatives": [
+        {{
+          "tasks": [
+            {{"task": "text-summarization", "id": 0, "dep": [-1], "args": {{"document": "<input_document>"}}}}
+          ]
+        }},
+        {{
+          "tasks": [
+            {{"task": "document-analysis", "id": 0, "dep": [-1], "args": {{"document": "<input_document>"}}}},
+            {{"task": "text-summarization", "id": 1, "dep": [0], "args": {{"text": "<resource>-0"}}}}
+          ]
+        }}
+      ]
+    }}
+
+    Example 3 - No Matching Services:
+    User: "Convert audio to video"
+    Context contains: image-classification, text-processing
     
-    Example 2:
-    Question: In e2.jpg, what's the animal and what's it doing?
-    Answer: [
-    {{"task": "image-to-text", "id": 0, "dep": [-1], "args": {{"image": "e2.jpg"}}}},
-    {{"task": "image-cls", "id": 1, "dep": [-1], "args": {{"image": "e2.jpg"}}}},
-    {{"task": "object-detection", "id": 2, "dep": [-1], "args": {{"image": "e2.jpg"}}}},
-    {{"task": "visual-question-answering", "id": 3, "dep": [-1], "args": {{"text": "what's the animal doing?", "image": "e2.jpg"}}}}
-    ]
+    Response: {{
+      "alternatives": []
+    }}
     
-    Example 3:
-    Question: First generate a HED image of e3.jpg, then based on the HED image and a text "a girl reading a book," create a new image as a response.
-    Answer: [
-    {{"task": "pose-detection", "id": 0, "dep": [-1], "args": {{"image": "e3.jpg"}}}},
-    {{"task": "pose-text-to-image", "id": 1, "dep": [0], "args": {{"text": "a girl reading a book", "image": "<resource>-0"}}}}
-    ]
-    
-    Now, based on the above examples, decompose the following user request into structured tasks that follow the json structure provided in the examples:
-    Question: {question}
+    Analyze the user requirements and generate appropriate compositions using ONLY the services from the context below.
+    Here are the available services that were retrieved based on the user's request:
     {context}
+    
     Helpful Answer:
 
   simple_composition: |
