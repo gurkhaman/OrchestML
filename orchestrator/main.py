@@ -11,12 +11,37 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from dotenv import dotenv_values
+from models import Task, CompositionBlueprint, CompositionBlueprintAgentResponse
+from langchain_ollama import ChatOllama
+import os
 
-REPOSITORY_URL = "http://repository:8001"
 
-# Initialize LangChain components
 config = dotenv_values(".env")
-llm = ChatOpenAI(model="gpt-5-mini-2025-08-07", temperature=0, api_key=config.get("OPENAI_API_KEY"))
+REPOSITORY_URL = "http://repository:8001"
+os.environ["LANGCHAIN_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = config.get("LANGCHAIN_API_KEY")
+
+
+def create_llm():
+    """Create LLM instance based on provider configuration"""
+    provider = config.get("LLM_PROVIDER", "openai").lower()
+    provider = "openai"
+
+    print(f"Creating LLM instance for {provider}")
+    if provider == "ollama":
+        return ChatOllama(
+            base_url=f"http://{config.get('OLLAMA_URL')}",
+            model=config.get("OLLAMA_MODEL"),
+            temperature=0,
+        ).bind_tools([CompositionBlueprintAgentResponse])
+    else:
+        return ChatOpenAI(
+            model=config.get("LLM_MODEL", "gpt-5-2025-08-07"),
+            temperature=0, 
+            api_key=config.get("OPENAI_API_KEY")
+        )
+
+llm = create_llm()
 
 # Load prompts from YAML
 def load_prompts():
@@ -35,7 +60,7 @@ class ComposeRequest(BaseModel):
 class ComposeResponse(BaseModel):
     composition_id: str
     status: str
-    services: list[dict[str, Any]]
+    blueprints: CompositionBlueprintAgentResponse
     created_at: str
 
 class RAGRequest(BaseModel):
@@ -56,21 +81,29 @@ async def retrieve_services(query: str, k: int = 4) -> str:
             return "\n\n".join([r["content"] for r in results])
         raise Exception(f"Search failed: {response.status_code}")
 
-async def rag_query(question: str, prompt_template: str) -> str:
+async def rag_query(question: str, prompt_template: str) -> CompositionBlueprintAgentResponse:
     """Simple RAG chain"""
     context = await retrieve_services(question)
     prompt = PromptTemplate.from_template(prompt_template)
-    
+
     chain = (
         {"context": lambda x: context, "question": RunnablePassthrough()}
-        | prompt | llm | StrOutputParser()
+        | prompt | llm.with_structured_output(CompositionBlueprintAgentResponse)
     )
-    
-    return chain.invoke(question)
+
+    result = await chain.ainvoke(question)
+
+    return result
 
 async def get_prompt(prompt_name: str) -> str:
     """Get prompt template by name"""
     return prompts["prompts"].get(prompt_name, "")
+
+async def compose_with_rag(requirements: str) -> CompositionBlueprintAgentResponse:
+    """Get raw LLM composition breakdown response"""
+    template = await get_prompt("composition_decomposition")  
+    raw_response = await rag_query(requirements, template)
+    return raw_response
 
 @app.get("/")
 async def root():
@@ -111,19 +144,14 @@ async def full_health():
 async def compose_services(request: ComposeRequest):
     composition_id = str(uuid.uuid4())
     
-    mock_services = [
-        {"task": "speech-to-text", "model": "whisper-base", "input": "microphone"},
-        {"task": "face-detection", "model": "mtcnn", "input": "camera"},
-        {"task": "navigation", "model": "nav2", "input": "goal_pose"}
-    ]
+    # Get RAG-generated composition breakdowns
+    raw_breakdowns = await compose_with_rag(request.requirements)
     
     composition = {
         "composition_id": composition_id,
         "status": "success",
-        "services": mock_services,
+        "blueprints": raw_breakdowns,
         "created_at": datetime.now().isoformat(),
-        "requirements": request.requirements,
-        "constraints": request.constraints
     }
 
     compositions[composition_id] = composition

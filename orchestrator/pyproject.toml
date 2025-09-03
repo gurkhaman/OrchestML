@@ -8,5 +8,6 @@ dependencies = [
     "fastapi[standard]>=0.116.1",
     "httpx>=0.28.1",
     "langchain-core>=0.3.74",
+    "langchain-ollama>=0.3.7",
     "langchain-openai>=0.3.31",
 ]
