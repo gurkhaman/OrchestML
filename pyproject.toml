@@ -6,11 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Arogya Kharel", email = "25946015+gurkhaman@users.noreply.github.com" }
 ]
-requires-python = ">=3.13"
 dependencies = [
-    "fastapi[standard]>=0.116.1",
-    "langchain>=0.3.27",
-    "pydantic>=2.11.7",
 ]
 
 [build-system]
