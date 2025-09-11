@@ -16,6 +16,7 @@ class TaskArgs(BaseModel):
 class Task(BaseModel):
     """Individual task/service definition"""
     task: str = Field(description="Service or task name")
+    service_name: str = Field(description="Service name")
     id : int = Field(description="Unique task identifier")
     dep: list[int] = Field(description="Task dependencies, [-1] for no dependencies") # TODO: What happens if the field is optional?
     args: TaskArgs = Field(description="Task execution parameters")
