@@ -1,0 +1,72 @@
+{
+  "mppi_run5_auto": {
+    "collisions": 27,
+    "near_misses": 190,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.6961566209793091,
+    "total_scans": 558
+  },
+  "mppi_run4_auto": {
+    "collisions": 27,
+    "near_misses": 75,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.8801501393318176,
+    "total_scans": 568
+  },
+  "mppi_run1_auto": {
+    "collisions": 147,
+    "near_misses": 186,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.791790783405304,
+    "total_scans": 1105
+  },
+  "mppi_run3_auto": {
+    "collisions": 23,
+    "near_misses": 155,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.760558545589447,
+    "total_scans": 583
+  },
+  "dwb_run2_auto": {
+    "collisions": 59,
+    "near_misses": 161,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.8188942074775696,
+    "total_scans": 779
+  },
+  "mppi_run2_auto": {
+    "collisions": 23,
+    "near_misses": 171,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.7171151638031006,
+    "total_scans": 569
+  },
+  "dwb_run4_auto": {
+    "collisions": 48,
+    "near_misses": 126,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.7078366875648499,
+    "total_scans": 602
+  },
+  "dwb_run1_auto": {
+    "collisions": 0,
+    "near_misses": 97,
+    "min_distance_overall": 0.34334221482276917,
+    "avg_min_distance": 0.6925432085990906,
+    "total_scans": 536
+  },
+  "dwb_run5_auto": {
+    "collisions": 70,
+    "near_misses": 150,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.7692986130714417,
+    "total_scans": 811
+  },
+  "dwb_run3_auto": {
+    "collisions": 101,
+    "near_misses": 159,
+    "min_distance_overall": 0.11999999731779099,
+    "avg_min_distance": 0.8283981084823608,
+    "total_scans": 1101
+  }
+}

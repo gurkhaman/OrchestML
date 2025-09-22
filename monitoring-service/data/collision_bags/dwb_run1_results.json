@@ -1,0 +1,30 @@
+{
+  "controller": "dwb",
+  "run": 1,
+  "goals": [
+    {
+      "goal": {
+        "x": 5.5,
+        "y": 1.0,
+        "z": 0.0,
+        "w": -1.0
+      },
+      "navigation_time": 75.1810576915741,
+      "result_code": 0,
+      "recoveries": 1
+    },
+    {
+      "goal": {
+        "x": -1.1,
+        "y": 1.5,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "navigation_time": 54.76075720787048,
+      "result_code": 0,
+      "recoveries": 0
+    }
+  ],
+  "total_time": 133.94600319862366,
+  "total_recoveries": 1
+}

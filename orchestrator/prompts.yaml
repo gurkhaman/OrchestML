@@ -94,282 +94,97 @@ prompts:
     Return the most relevant services with their relevance scores.
 
   requirement_cot: |
-    You are an expert requirements analyst. Analyze this request concisely in 2-3 sentences per step.
+    Analyze this request at a HIGH-LEVEL service perspective:
 
-    User Requirements: {requirements}
-    User Constraints: {constraints}
+    Requirements: {requirements}
+    Constraints: {constraints}
 
-    Step 1 - Understanding: What is the core task? What assumptions should I make?
+    1. Core service needs (what 3-4 major ML services are needed)?
+    2. Primary domain and key objectives?
+    3. Essential inputs/outputs between services?
+    4. Critical constraints that affect service design?
+    5. Success criteria for the overall system?
 
-    Step 2 - Domain: Which primary domain (image-processing, text-analysis, data-transformation, multimodal, other)? Any secondary domains?
-
-    Step 3 - Goals: What 3-4 specific, measurable objectives need to be achieved?
-
-    Step 4 - I/O: What inputs are required and what outputs expected? Key format considerations?
-
-    Step 5 - Success: How would we measure successful completion? 2-3 key metrics or criteria.
-
-    Step 6 - Constraints: What are the main limitations or requirements to consider?
-
-    Provide concise step-by-step reasoning:
+    Focus on SERVICE-LEVEL needs, not individual ML functions.
 
   requirement_analysis: |
-    Based on your step-by-step reasoning, provide the final structured analysis.
-
-    Your reasoning was:
+    Based on your service-level reasoning, provide structured analysis:
     {reasoning}
 
-    Now provide a clean, structured analysis with:
-    - Clear domain classification
-    - Specific, actionable goals
-    - Precise input/output types
-    - Measurable success criteria
-    - All relevant constraints
-    - Your confidence level (1-10 scale) in this analysis
-
-    Provide the structured analysis:
+    Extract for SERVICE-LEVEL design:
+    - Domain classification
+    - 3-4 high-level service goals
+    - Service input/output types
+    - Service success criteria
+    - Service constraints
+    - Confidence (1-10)
 
   task_decomposition_cot: |
-    You are an expert task decomposition analyst. Break down requirements into atomic ML tasks in 1-2 sentences per step.
+    Break down requirements into 3-4 service-level ML tasks:
     
-    Requirements Analysis:
     Domain: {domain} | Goals: {goals} | Constraints: {constraints}
     
-    Step 1 - Task List: What 3-5 atomic tasks are needed? Each task = single ML service capability. (1-2 sentences)
+    1. Service Tasks: What 3-4 deployable ML services are needed? (Group related ML functions into single services)
+    2. Dependencies: Execution order and data flow between services?
+    3. Validation: Do services cover all goals without redundancies?
+
+    Example - Document Processing System:
+    Requirements: Process scanned documents to extract and categorize information
+    Service Tasks: Document Analysis → Information Extraction → Content Classification
+    Dependencies: sequential (analysis → extraction → classification)
+    Coverage: analysis (structure), extraction (data), classification (categorization)
     
-    Step 2 - Dependencies: What's the execution order and data flow between tasks? (1-2 sentences)
-    
-    Step 3 - Validation: Do tasks cover all goals without redundancies? (1-2 sentences)
+    Note: Each service may contain multiple ML functions internally, but should be deployable as a single unit.
 
-    DEMONSTRATIONS:
 
-    Example 1 - Emergency Vehicle Detection:
-    Requirements Analysis:
-    Domain: multimodal | Goals: ['detect emergency vehicles', 'classify vehicle types', 'plan collision-free path'] | Constraints: ['300ms processing time', 'ROS2 integration', '95% accuracy']
-    Task Breakdown:
-    Step 1 - Task List: Need emergency vehicle detection from camera feed and vehicle type classification for accurate identification. Path planning can be handled by a single ML service for trajectory optimization. This gives us 3 focused ML tasks that map well to available services.
-
-    Step 2 - Dependencies: Detection runs first on camera input, classification depends on detection results, path planning uses both detection and classification data for informed decision making.
-
-    Step 3 - Validation: Three tasks cover all ML requirements efficiently - detection handles identification, classification handles accuracy, path planning handles collision avoidance - with clear service mappings and no redundancy.
-
-    Example 2 - Document Analysis:
-    Requirements Analysis:
-    Domain: multimodal | Goals: ['detect layout', 'classify content', 'extract information'] | Constraints: ['batch processing', 'high accuracy']
-    Task Breakdown:
-    Step 1 - Task List: Require layout detection for document structure, content classification for document type, and information extraction for structured data. Each represents a distinct ML capability that can be handled by separate services.
-
-    Step 2 - Dependencies: Layout detection runs first to identify regions, content classification can run in parallel or after layout detection, information extraction depends on both previous tasks for comprehensive analysis.
-
-    Step 3 - Validation: Tasks are complementary without overlap - layout detection handles structure, content classification handles semantics, information extraction handles data parsing - covering all requirements efficiently.
-
-    Example 3 - Face Analytics:
-    Requirements Analysis:
-    Domain: image-processing | Goals: ['detect emotions', 'analyze demographics'] | Constraints: ['real-time processing', 'high accuracy']
-    Task Breakdown:
-    Step 1 - Task List: Need emotion recognition for facial expressions and demographic analysis for age/gender classification. Both can be handled by specialized ML services that work on face images.
-
-    Step 2 - Dependencies: Both tasks can run independently on the same face image input, allowing for parallel processing to optimize real-time performance.
-
-    Step 3 - Validation: Two tasks cover all requirements without redundancy - emotion recognition handles affective analysis, demographic analysis handles identity characteristics - with clear parallel processing capabilities.
-
-    Provide brief task breakdown:
-
-  task_service_mapping: |
-    Based on your task decomposition and available services, analyze task-service mappings.
-    
-    Task Breakdown:
-    {task_breakdown}
-    
-    Available Services:
-    {retrieved_services}
-    
-    For each task you identified, find the best matching services and evaluate them:
-    
-    Analysis Guidelines:
-    1. Match task requirements to service capabilities
-    2. Consider input/output compatibility 
-    3. Evaluate how well the service fits the specific task
-    4. Rate your certainty about each match
-    
-    Scoring Guidelines:
-    - Relevance Score (1-10): How well does the service match the task?
-      1-3: Poor match, major gaps in capabilities
-      4-6: Moderate match, some limitations or uncertainties
-      7-9: Good match, minor gaps or considerations
-      10: Perfect match, ideal service for this task
-    
-    - Confidence Score (1-10): How certain are you about this assessment?
-      1-3: Very uncertain, limited information or unclear requirements
-      4-6: Moderate certainty, some ambiguity remains
-      7-9: High certainty, clear match with good evidence
-      10: Completely certain, obvious perfect match
-    
-    Important: Do not include task_id in your response - it will be auto-generated.
-    
-    Provide structured task-service mappings:
 
   task_structured_extraction: |
-    Based on your task breakdown reasoning, extract atomic ML tasks in structured format.
+    Extract deployable ML services from your reasoning:
+    {task_breakdown}
     
-    Your reasoning: {task_breakdown}
+    DEPLOYMENT CONSTRAINT: Extract exactly 3-4 deployable services maximum.
+    If your reasoning identifies more than 4 functions, you MUST consolidate related capabilities into single services that would be deployed together.
     
-    Extract individual tasks that are:
-    - Executable by a single ML service  
-    - Have clear inputs and outputs
-    - Focus on one specific capability
+    CONSOLIDATION RULES:
+    - Speech/audio processing functions → Single Speech Service
+    - Person/face recognition functions → Single Identification Service  
+    - Navigation/planning/control functions → Single Navigation Service
+    - Do NOT create separate services for orchestration, logging, or monitoring
     
-    For each task provide:
-    - Brief name (e.g., "Image Deblurring", "Object Detection")
-    - Detailed description suitable for service search
-    - 3-5 ML keywords for search optimization
+    For each service provide:
+    - Brief name (e.g., "Speech Processing Service")
+    - Description for service search
+    - 3-5 ML keywords
     
-    Important: Do not include task_id - it will be auto-generated.
-
-    DEMONSTRATIONS:
-
-    Example 1 - Emergency Vehicle Detection:
-    Your reasoning: Emergency vehicle detection and classification are well-covered by repository services. Path planning requires specialized trajectory optimization. Three tasks provide the right balance of functionality and service availability.
-    Structured Tasks:
-    - name: Emergency Vehicle Detection
-      description: Detect emergency vehicles (ambulances, fire trucks) in camera feed with bounding boxes and confidence scores
-      ml_keywords: ["object-detection", "emergency-vehicles", "real-time-detection", "coco-dataset"]
-
-    - name: Vehicle Type Classification
-      description: Classify detected emergency vehicles by specific type (ambulance, fire truck, police) for appropriate response
-      ml_keywords: ["image-classification", "vehicle-classification", "emergency-services", "fine-grained-classification"]
-
-    - name: Collision-Free Path Planning
-      description: Generate collision-free navigation trajectory based on detected vehicles and obstacles
-      ml_keywords: ["path-planning", "trajectory-optimization", "collision-avoidance", "motion-planning"]
-
-    Example 2 - Document Analysis:
-    Your reasoning: Layout detection, content classification, and information extraction are distinct ML capabilities. Each can be handled by specialized services with clear input/output relationships.
-    Structured Tasks:
-    - name: Layout Detection
-      description: Detect and analyze document layout including text blocks, images, and structural elements
-      ml_keywords: ["layout-analysis", "document-structure", "text-detection", "document-parsing"]
-
-    - name: Content Classification
-      description: Classify document content type and category using advanced language models
-      ml_keywords: ["document-classification", "content-analysis", "text-classification", "transformer-models"]
-
-    - name: Information Extraction
-      description: Extract structured information and key data points from processed documents
-      ml_keywords: ["information-extraction", "data-extraction", "named-entity-recognition", "document-ai"]
-
-    Example 3 - Face Analytics:
-    Your reasoning: Emotion recognition and demographic analysis are complementary ML tasks that can run in parallel. Both work on face images and provide different types of facial analysis.
-    Structured Tasks:
-    - name: Emotion Recognition
-      description: Detect and classify facial expressions and emotional states from face images
-      ml_keywords: ["emotion-recognition", "facial-expression", "affect-detection", "sentiment-analysis"]
-
-    - name: Demographic Analysis
-      description: Analyze demographic characteristics including age, gender, and ethnicity from facial features
-      ml_keywords: ["demographic-analysis", "face-analysis", "age-estimation", "gender-classification"]
-
-    Extract structured tasks:
+    Example:
+    - name: Emergency Vehicle Detection Service
+      description: Detect and classify emergency vehicles in camera feed with bounding boxes
+      ml_keywords: ["object-detection", "emergency-vehicles", "real-time", "yolo"]
 
   composition_builder_cot: |
-    You are an expert composition architect. Analyze the complete service landscape in 1-2 sentences per step.
+    Analyze service-task matching:
     
-    Original Requirements: {requirements}
+    Requirements: {requirements}
+    Tasks: {structured_tasks}
+    Services: {retrieved_services}
     
-    Decomposed Tasks: 
-    {structured_tasks}
-    
-    Available Services Pool:
-    {retrieved_services}
-    
-    Step 1 - Coverage Analysis: Do we have suitable services for each task? Any critical gaps or missing capabilities? (1-2 sentences)
-    
-    Step 2 - Quality Assessment: Which services best match their intended tasks based on capabilities? Any standout performers or poor matches? (1-2 sentences)
-    
-    Step 3 - Cross-Task Optimization: Can any services handle multiple tasks efficiently? Any redundancies or consolidation opportunities? (1-2 sentences)
-    
-    Step 4 - Feasibility Decision: Can we build a complete composition with available services, or do we need to adapt our approach? (1-2 sentences)
-    
-     Provide brief composition analysis:
+    1. Coverage: Suitable services for each task? Critical gaps?
+    2. Quality: Best service matches? Poor matches?
+    3. Optimization: Multi-task services? Redundancies?
+    4. Feasibility: Complete composition possible?
 
   composition_builder_structured: |
-     Based on your composition analysis, create the final blueprint with 1-3 alternative compositions.
-
-     Your Analysis:
+     Create final blueprint with 1-3 alternatives based on your analysis:
      {composition_analysis}
 
-     Original Requirements: {requirements}
+     Requirements: {requirements}
 
-     Create structured composition blueprint(s) that include:
-     - Service selection with clear justification for each task
-     - Task execution order and dependencies
-     - Input/output data flow between services
-     - Alternative compositions if beneficial
-     - Overall confidence level in composition viability (1-10 scale)
+     For each task, use exact service_name from retrieved services.
+     Include: service selection, dependencies, confidence (1-10).
 
-     Guidelines:
-     - Prioritize services with highest task relevance
-     - Optimize for efficiency and avoid redundancy
-     - Handle any identified gaps through task adaptation
-     - Provide clear reasoning for service choices
-     - Consider real-world execution constraints
-
-     For each task, specify the exact service_name from the retrieved services.
-     Match tasks to the most relevant services from the service pool.
-     Include service_name field in each task object.
-
-     DEMONSTRATIONS:
-
-     Example 1 - Emergency Vehicle Detection:
-     Analysis: Repository provides excellent coverage for detection and classification with yolos-tiny and resnet-18. Motion control requires external ROS2 service.
-     Requirements: Detect emergency vehicles from camera feed and alter path
-     Description:
-       Alternative 1: Emergency Vehicle Detection Pipeline
-       - Task 1: emergency-vehicle-detection using yolos-tiny service
-         * Input: camera feed from /camera/image_raw
-         * Dependencies: none
-         * Purpose: Detect emergency vehicles with high accuracy
-       - Task 2: vehicle-type-classification using resnet-18 service
-         * Input: detection results from task 1
-         * Dependencies: task 1 completion
-         * Purpose: Classify detected vehicles by type
-       * Overall confidence: 9/10
-       * Notes: Motion control requires external ROS2 integration
-
-     Example 2 - Document Analysis:
-     Analysis: Complete coverage with yolos-small for layout detection, beit-base for content classification, and resnet-50 for detailed analysis.
-     Requirements: Analyze document content and extract structured information
-     Description:
-       Alternative 1: Complete Document Analysis Pipeline
-       - Task 1: layout-detection using yolos-small service
-         * Input: document image
-         * Dependencies: none
-         * Purpose: Detect document layout and text regions
-       - Task 2: content-classification using beit-base-patch16-224-pt22k-ft22k service
-         * Input: document image
-         * Dependencies: none (can run in parallel)
-         * Purpose: Classify document content and type
-       - Task 3: information-extraction using resnet-50 service
-         * Input: processed document from tasks 1 and 2
-         * Dependencies: tasks 1 and 2 completion
-         * Purpose: Extract structured information
-       * Overall confidence: 8/10
-       * Notes: Sequential processing for optimal accuracy
-
-     Example 3 - Face Analytics:
-     Analysis: Specialized coverage with vit-face-expression for emotion recognition and gender-classification for demographic analysis.
-     Requirements: Analyze faces for emotion and demographic information
-     Description:
-       Alternative 1: Parallel Face Analysis
-       - Task 1: emotion-recognition using vit-face-expression service
-         * Input: face image
-         * Dependencies: none
-         * Purpose: Detect facial expressions and emotions
-       - Task 2: demographic-analysis using gender-classification service
-         * Input: face image
-         * Dependencies: none (parallel processing)
-         * Purpose: Analyze demographic information
-       * Overall confidence: 9/10
-       * Notes: Parallel processing for real-time performance
-
-     Generate the final composition blueprint as JSON:
+     Example format:
+     Alternative 1: [Pipeline Name]
+     - Task 1: [task-name] using [service_name]
+       * Input: [input description]
+       * Dependencies: [none/task numbers]
+     * Confidence: [1-10]/10

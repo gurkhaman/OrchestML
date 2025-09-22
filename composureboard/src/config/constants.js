@@ -20,10 +20,10 @@ export const LAYOUT_CONFIG = {
 
 // Application Metadata
 export const APP_CONFIG = {
-  TITLE: 'ComposureCI',
+  TITLE: 'OrchestML',
   SUBTITLE: 'Service Composition Visualizer',
-  VERSION: '1.0.0',
-  MODE: 'Mock Data Mode',
+  VERSION: '0.0.1',
+  // MODE: 'Mock Data Mode',
 };
 
 // File Upload Configuration

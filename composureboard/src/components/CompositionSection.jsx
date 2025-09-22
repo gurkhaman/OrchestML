@@ -6,6 +6,7 @@ import { COMPOSITION_CONFIG, LAYOUT_CONFIG } from '../config/constants.js';
 import ServiceNode from './ServiceNode.jsx';
 import AlternativeSelector from './AlternativeSelector.jsx';
 import ExportPanel from './ExportPanel.jsx';
+import ConfirmationPanel from './ConfirmationPanel.jsx';
 
 const nodeTypes = {
   custom: ServiceNode,
@@ -28,6 +29,12 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
   const [compositions, setCompositions] = useState(mockCompositions);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Confirmation workflow state
+  const [confirmationMode, setConfirmationMode] = useState(false);
+  const [confirmedComposition, setConfirmedComposition] = useState(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [deploymentStatus, setDeploymentStatus] = useState(null);
   
   // Validate layout configuration on component mount
   useEffect(() => {
@@ -64,6 +71,9 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
   const generateComposition = async (requirements) => {
     setLoading(true);
     setError(null);
+    setConfirmationMode(false);
+    setConfirmedComposition(null);
+    setDeploymentStatus(null);
     
     try {
       // Import API service dynamically to avoid import issues during build
@@ -78,7 +88,8 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
       setSelectedAlternative(0);
       
       console.log('Composition generated successfully:', {
-        alternatives: convertedCompositions.alternatives.length
+        alternatives: convertedCompositions.alternatives.length,
+        compositionId: convertedCompositions.metadata.compositionId
       });
       
     } catch (err) {
@@ -92,6 +103,83 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
       setLoading(false);
     }
   };
+
+  /**
+   * Handle composition confirmation
+   */
+  const handleConfirmDeployment = async (deploymentContext) => {
+    setIsConfirming(true);
+    setError(null);
+    
+    try {
+      const { confirmComposition, trackConfirmedComposition } = await import('../utils/apiService.js');
+      
+      // Use orchestrator-generated composition ID, not UI-generated
+      const compositionId = compositions.metadata?.compositionId;
+      if (!compositionId) {
+        throw new Error('No composition ID available from orchestrator');
+      }
+      
+      const selectedBlueprint = compositions.alternatives[selectedAlternative];
+      
+      const confirmationData = {
+        blueprint: selectedBlueprint,
+        deploymentContext,
+        originalRequirements: uploadedFile?.content || 'Mock requirements',
+        selectedAlternativeIndex: selectedAlternative
+      };
+      
+      console.log('Confirming deployment for composition:', compositionId);
+      
+      const response = await confirmComposition(compositionId, confirmationData);
+      
+      // Track the confirmed composition locally
+      trackConfirmedComposition(compositionId, {
+        blueprint: selectedBlueprint,
+        deploymentContext,
+        response
+      });
+      
+      setConfirmedComposition({
+        compositionId,
+        ...response,
+        blueprint: selectedBlueprint,
+        deploymentContext
+      });
+      
+      setConfirmationMode(false);
+      setDeploymentStatus('deployed');
+      
+      console.log('Composition deployed successfully:', response);
+      
+    } catch (err) {
+      console.error('Deployment confirmation failed:', err);
+      setError(`Deployment failed: ${err.message}`);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  /**
+   * Handle confirmation cancellation
+   */
+  const handleConfirmationCancel = () => {
+    setConfirmationMode(false);
+    setError(null);
+  };
+
+  /**
+   * Show confirmation panel
+   */
+  const handleShowConfirmation = () => {
+    setConfirmationMode(true);
+    setError(null);
+  };
+
+
+
+
+
   
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
@@ -126,11 +214,7 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
               </button>
             </div>
           )}
-          {mode === 'mock' && (
-            <div className="mode-info">
-              <span className="mode-badge mock">Mock Data Mode</span>
-            </div>
-          )}
+
         </div>
         
         {/* Loading state */}
@@ -151,8 +235,27 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
           </div>
         )}
         
-        {/* Controls - only show when not loading */}
-        {!loading && compositions?.alternatives && (
+        {/* Deployment Status */}
+        {deploymentStatus && (
+          <div className={`deployment-status ${deploymentStatus}`}>
+            {deploymentStatus === 'deployed' && confirmedComposition && (
+              <div className="status-success">
+                ✅ <strong>Composition Deployed Successfully!</strong>
+                <div className="status-details">
+                  <span>ID: <code>{confirmedComposition.compositionId}</code></span>
+                  <span>Environment: {confirmedComposition.deploymentContext.environment}</span>
+                  <span>Monitoring: {confirmedComposition.deploymentContext.monitoringEnabled ? 'Enabled' : 'Disabled'}</span>
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+
+
+
+        {/* Controls - only show when not loading and not in confirmation mode */}
+        {!loading && !confirmationMode && compositions?.alternatives && (
           <div className="composition-controls">
             <div className="composition-controls-left">
               <AlternativeSelector 
@@ -165,15 +268,32 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
               <ExportPanel 
                 blueprint={compositions.alternatives[selectedAlternative]}
                 alternativeIndex={selectedAlternative}
+                onConfirmDeployment={handleShowConfirmation}
+                isDeployed={deploymentStatus === 'deployed'}
+                compositionId={compositions.metadata?.compositionId}
               />
             </div>
           </div>
         )}
       </div>
       
+      {/* Confirmation Panel */}
+      {confirmationMode && compositions?.alternatives && (
+        <div className="confirmation-overlay">
+          <ConfirmationPanel
+            blueprint={compositions.alternatives[selectedAlternative]}
+            compositionId={compositions.metadata?.compositionId || 'pending-generation'}
+            alternativeIndex={selectedAlternative}
+            onConfirm={handleConfirmDeployment}
+            onCancel={handleConfirmationCancel}
+            isConfirming={isConfirming}
+          />
+        </div>
+      )}
+
       {/* Viewport - always show, but empty when loading */}
       <div className="composition-viewport">
-        {!loading && nodes.length > 0 ? (
+        {!loading && !confirmationMode && nodes.length > 0 ? (
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -195,12 +315,18 @@ const CompositionSection = ({ mode = 'mock', uploadedFile = null, onUseMockData 
               <p className="loading-subtitle">This may take 30-60 seconds</p>
             </div>
           </div>
+        ) : confirmationMode ? (
+          <div className="viewport-confirmation">
+            <p>Review deployment configuration above</p>
+          </div>
         ) : (
           <div className="viewport-empty">
             <p>No composition data available</p>
           </div>
         )}
       </div>
+
+
     </section>
   );
 };

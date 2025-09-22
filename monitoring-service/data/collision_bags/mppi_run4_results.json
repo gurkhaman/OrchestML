@@ -1,0 +1,30 @@
+{
+  "controller": "mppi",
+  "run": 4,
+  "goals": [
+    {
+      "goal": {
+        "x": 5.5,
+        "y": 1.0,
+        "z": 0.0,
+        "w": -1.0
+      },
+      "navigation_time": 52.90101456642151,
+      "result_code": 0,
+      "recoveries": 3
+    },
+    {
+      "goal": {
+        "x": -1.1,
+        "y": 1.5,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "navigation_time": 54.20060896873474,
+      "result_code": 0,
+      "recoveries": 0
+    }
+  ],
+  "total_time": 111.10600328445435,
+  "total_recoveries": 3
+}

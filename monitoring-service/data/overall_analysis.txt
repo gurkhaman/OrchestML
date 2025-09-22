@@ -1,0 +1,34 @@
+Loaded 5 DWB runs and 5 MPPI runs
+============================================================
+NAVIGATION CONTROLLER COMPARISON REPORT
+============================================================
+
+1. TOTAL NAVIGATION TIME (seconds)
+----------------------------------------
+DWB:  155.52 ± 37.84 (n=5)
+MPPI: 125.49 ± 33.81 (n=5)
+Improvement: 19.3% faster
+Statistical significance: p = 0.2223 (not significant)
+
+2. RECOVERY BEHAVIORS
+----------------------------------------
+DWB:  4.4 ± 4.2 recoveries
+MPPI: 5.0 ± 4.5 recoveries
+
+3. SEGMENT ANALYSIS
+----------------------------------------
+Bottom→Top: DWB 95.83s vs MPPI 62.50s
+Top→Bottom: DWB 55.68s vs MPPI 58.98s
+
+4. SUMMARY & RECOMMENDATION
+----------------------------------------
+⚠ No statistically significant difference found
+  Recommendation: Either controller acceptable, consider other factors
+
+Effect size: 0.94
+
+5. COLLISION ANALYSIS
+----------------------------------------
+For collision analysis, run:
+python3 collision_analyzer.py
+============================================================

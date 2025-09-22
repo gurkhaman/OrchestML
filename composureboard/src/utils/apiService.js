@@ -9,6 +9,9 @@ const API_CONFIG = {
   BASE_URL: 'http://localhost:8000', // Orchestrator service
   ENDPOINTS: {
     COMPOSE: '/api/v1/compose',
+    CONFIRM: '/api/v1/compositions/{id}/confirm',
+    RECOMPOSE: '/api/v1/recompose',
+    STATUS: '/api/v1/compositions/{id}/status',
     HEALTH: '/api/v1/health'
   },
   TIMEOUT: 60000, // 60 seconds for composition generation
@@ -149,6 +152,141 @@ export const convertApiResponseToMockFormat = (apiResponse) => {
       createdAt: apiResponse.created_at
     }
   };
+};
+
+/**
+ * Confirm a composition for deployment
+ * @param {string} compositionId - UUID of the composition to confirm
+ * @param {Object} confirmationData - Deployment context and configuration
+ * @returns {Promise<Object>} Confirmation response
+ */
+export const confirmComposition = async (compositionId, confirmationData) => {
+  if (!compositionId || !confirmationData) {
+    throw new APIError('Composition ID and confirmation data are required', 400);
+  }
+
+  const endpoint = API_CONFIG.ENDPOINTS.CONFIRM.replace('{id}', compositionId);
+  
+  const payload = {
+    confirmed_blueprint: confirmationData.blueprint,
+    deployment_context: confirmationData.deploymentContext,
+    original_requirements: confirmationData.originalRequirements,
+    selected_alternative: confirmationData.selectedAlternativeIndex,
+    confirmed_at: new Date().toISOString()
+  };
+
+  console.log('Confirming composition:', { 
+    compositionId, 
+    deploymentContext: confirmationData.deploymentContext 
+  });
+
+  const response = await makeRequest(endpoint, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+
+  console.log('Composition confirmed:', {
+    compositionId: response.composition_id,
+    status: response.status
+  });
+
+  return response;
+};
+
+/**
+ * Get composition deployment status
+ * @param {string} compositionId - UUID of the composition
+ * @returns {Promise<Object>} Status response
+ */
+export const getCompositionStatus = async (compositionId) => {
+  if (!compositionId) {
+    throw new APIError('Composition ID is required', 400);
+  }
+
+  const endpoint = API_CONFIG.ENDPOINTS.STATUS.replace('{id}', compositionId);
+  
+  try {
+    const response = await makeRequest(endpoint);
+    return response;
+  } catch (error) {
+    if (error.status === 404) {
+      return { status: 'not_found', message: 'Composition not found' };
+    }
+    throw error;
+  }
+};
+
+/**
+ * Trigger recomposition for a failed deployment
+ * @param {Object} recompositionData - Full recomposition trigger data
+ * @returns {Promise<Object>} Recomposition response
+ */
+export const triggerRecomposition = async (recompositionData) => {
+  if (!recompositionData || !recompositionData.composition_id) {
+    throw new APIError('Recomposition data with composition_id is required', 400);
+  }
+
+  const payload = {
+    composition_id: recompositionData.composition_id,
+    trigger_type: recompositionData.trigger_type || 'performance_degradation',
+    failure_evidence: recompositionData.failure_evidence,
+    failure_analysis: recompositionData.failure_analysis,
+    timestamp: recompositionData.timestamp || new Date().toISOString()
+  };
+
+  console.log('Triggering recomposition:', { 
+    compositionId: payload.composition_id, 
+    triggerType: payload.trigger_type 
+  });
+
+  const response = await makeRequest(API_CONFIG.ENDPOINTS.RECOMPOSE, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+
+  console.log('Recomposition triggered:', {
+    originalId: payload.composition_id,
+    newCompositionId: response.new_composition_id,
+    status: response.status
+  });
+
+  return response;
+};
+
+// In-memory store for confirmed compositions (for UI tracking)
+const confirmedCompositions = new Map();
+
+/**
+ * Track a confirmed composition locally
+ * @param {string} compositionId - UUID of the composition
+ * @param {Object} compositionData - Full composition data
+ */
+export const trackConfirmedComposition = (compositionId, compositionData) => {
+  confirmedCompositions.set(compositionId, {
+    ...compositionData,
+    confirmedAt: new Date().toISOString(),
+    status: 'deployed'
+  });
+};
+
+/**
+ * Get locally tracked composition
+ * @param {string} compositionId - UUID of the composition
+ * @returns {Object|null} Tracked composition data
+ */
+export const getTrackedComposition = (compositionId) => {
+  return confirmedCompositions.get(compositionId) || null;
+};
+
+/**
+ * Get all locally tracked compositions
+ * @returns {Array} Array of confirmed compositions
+ */
+export const getAllTrackedCompositions = () => {
+  return Array.from(confirmedCompositions.entries()).map(([id, data]) => ({
+    compositionId: id,
+    ...data
+  }));
 };
 
 /**

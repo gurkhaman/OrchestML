@@ -31,16 +31,29 @@ class VectorStoreManager:
         if not directory.is_dir():
             raise ValueError(f"{directory} is not a directory")
         
-        md_files = list(directory.glob("*.md"))
-        print(f"Found {len(md_files)} markdown files in {directory}")
+        # Recursive search for markdown files in subdirectories
+        md_files = list(directory.glob("**/*.md"))
+        print(f"Found {len(md_files)} markdown files in {directory} (recursive)")
         
         for md_file in md_files:
             try:
                 loader = UnstructuredMarkdownLoader(str(md_file))
                 data = loader.load()
                 if data: 
+                    # Add repository source info to metadata
+                    relative_path = md_file.relative_to(directory)
+                    source_repo = relative_path.parts[0] if len(relative_path.parts) > 1 else "root"
+                    
+                    # Enhance metadata with source information
+                    data[0].metadata.update({
+                        "source": str(md_file),
+                        "repository": source_repo,
+                        "filename": md_file.name,
+                        "relative_path": str(relative_path)
+                    })
+                    
                     documents.append(data[0])
-                    print(f"Loaded: {md_file.name}")
+                    print(f"Loaded: {source_repo}/{md_file.name}")
             except Exception as e:
                 print(f"Error loading {md_file.name}: {e}")
 
@@ -92,14 +105,20 @@ class VectorStoreManager:
             "persist_dir_exists": self.persist_dir.exists(),
             "service_dir": str(self.service_dir),
             "service_dir_exists": self.service_dir.exists(),
-            "markdown_files_count": len(list(self.service_dir.glob("*.md"))) if self.service_dir.exists() else 0
+            "markdown_files_count": len(list(self.service_dir.glob("**/*.md"))) if self.service_dir.exists() else 0
         }
     
     def list_service_files(self):
         if not self.service_dir.exists():
             return []
         
-        return [md_file.name for md_file in self.service_dir.glob("*.md")]
+        # Return files with their repository subdirectory
+        files = []
+        for md_file in self.service_dir.glob("**/*.md"):
+            relative_path = md_file.relative_to(self.service_dir)
+            source_repo = relative_path.parts[0] if len(relative_path.parts) > 1 else "root"
+            files.append(f"{source_repo}/{md_file.name}")
+        return files
     
     def get_service_dir_info(self):
         """Get detailed info about service directory"""

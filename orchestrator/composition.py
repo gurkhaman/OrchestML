@@ -19,7 +19,7 @@ import httpx
 
 config = dotenv_values(".env")
 # llm = ChatOllama(model="deepseek-r1:14b", base_url=f"http://{config.get('OLLAMA_URL')}")
-llm = ChatOpenAI(model="gpt-5-mini", api_key=config.get("OPENAI_API_KEY", ""), disable_streaming=True)  # type: ignore
+llm = ChatOpenAI(model="gpt-5-nano", api_key=config.get("OPENAI_API_KEY", ""), disable_streaming=True)  # type: ignore
 os.environ["LANGCHAIN_TRACING"] = "true"
 langsmith_key = config.get("LANGSMITH_API_KEY")
 if langsmith_key:
