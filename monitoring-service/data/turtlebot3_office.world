@@ -1,0 +1,304 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="office">
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <scene>
+      <shadows>false</shadows>
+    </scene>
+
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>5.0 -5.0 8.0 0 1.2 0.785</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <precon_iters>0</precon_iters>
+          <sor>1.400000</sor>
+          <use_dynamic_moi_rescaling>1</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>2000.000000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01000</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- Office Building Structure -->
+    <model name="office_walls">
+      <static>true</static>
+      <link name="walls">
+        <!-- Outer walls -->
+        <collision name="north_wall_collision">
+          <pose>0 6 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>12 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="north_wall_visual">
+          <pose>0 6 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>12 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+
+        <collision name="south_wall_collision">
+          <pose>0 -6 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>12 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="south_wall_visual">
+          <pose>0 -6 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>12 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+
+        <collision name="east_wall_collision">
+          <pose>6 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 12 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="east_wall_visual">
+          <pose>6 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 12 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+
+        <collision name="west_wall_collision">
+          <pose>-6 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 12 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="west_wall_visual">
+          <pose>-6 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 12 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Office Desk 1 -->
+    <include>
+      <name>desk_1</name>
+      <pose>-3 3 0 0 0 0</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 1 -->
+    <include>
+      <name>chair_1</name>
+      <pose>-3 2.2 0 0 0 0</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+    <!-- Office Desk 2 -->
+    <include>
+      <name>desk_2</name>
+      <pose>3 3 0 0 0 3.14159</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 2 -->
+    <include>
+      <name>chair_2</name>
+      <pose>3 3.8 0 0 0 3.14159</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+    <!-- Office Desk 3 -->
+    <include>
+      <name>desk_3</name>
+      <pose>-3 -3 0 0 0 0</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 3 -->
+    <include>
+      <name>chair_3</name>
+      <pose>-3 -2.2 0 0 0 0</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+    <!-- Office Desk 4 -->
+    <include>
+      <name>desk_4</name>
+      <pose>3 -3 0 0 0 3.14159</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 4 -->
+    <include>
+      <name>chair_4</name>
+      <pose>3 -2.2 0 0 0 3.14159</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+    <!-- Meeting Area - Cafe Table -->
+    <include>
+      <name>meeting_table</name>
+      <pose>0 0 0 0 0 0</pose>
+      <uri>model://cafe_table</uri>
+    </include>
+
+    <!-- Trash Can -->
+    <include>
+      <name>trash_can_1</name>
+      <pose>-4.5 4.5 0 0 0 0</pose>
+      <uri>model://first_2015_trash_can</uri>
+    </include>
+
+    <!-- Moving Actor 1 - Horizontal corridor walker -->
+    <actor name="actor1">
+      <skin>
+        <filename>walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <pose>-4 1 0 0 0 0</pose>
+      <animation name="walking">
+        <filename>walk.dae</filename>
+        <scale>1.000000</scale>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>-4 1 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>8</time>
+            <pose>4 1 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>16</time>
+            <pose>-4 1 0 0 0 3.14159</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- Moving Actor 2 - Vertical corridor walker -->
+    <actor name="actor2">
+      <skin>
+        <filename>walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <pose>1 -4 0 0 0 1.57</pose>
+      <animation name="walking">
+        <filename>walk.dae</filename>
+        <scale>1.000000</scale>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>1 -4 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>10</time>
+            <pose>1 4 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>20</time>
+            <pose>1 -4 0 0 0 -1.57</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- Moving Actor 3 - Side corridor walker (slower) -->
+    <actor name="actor3">
+      <skin>
+        <filename>walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <pose>-1 -3 0 0 0 1.57</pose>
+      <animation name="walking">
+        <filename>walk.dae</filename>
+        <scale>0.8</scale>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>-1 -3 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>12</time>
+            <pose>-1 3 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>24</time>
+            <pose>-1 -3 0 0 0 -1.57</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+  </world>
+</sdf>

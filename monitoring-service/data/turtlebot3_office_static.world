@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="office">
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <scene>
+      <shadows>false</shadows>
+    </scene>
+
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>3.5 -3.5 6.0 0 1.0 0.785</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <precon_iters>0</precon_iters>
+          <sor>1.400000</sor>
+          <use_dynamic_moi_rescaling>1</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>2000.000000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01000</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- Office Building Structure -->
+    <model name="office_walls">
+      <static>true</static>
+      <link name="walls">
+        <!-- Outer walls -->
+        <collision name="north_wall_collision">
+          <pose>0 4 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>8 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="north_wall_visual">
+          <pose>0 4 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>8 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+
+        <collision name="south_wall_collision">
+          <pose>0 -4 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>8 0.2 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="south_wall_visual">
+          <pose>0 -4 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>8 0.2 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+
+        <collision name="east_wall_collision">
+          <pose>4 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 8 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="east_wall_visual">
+          <pose>4 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 8 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+
+        <collision name="west_wall_collision">
+          <pose>-4 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 8 2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="west_wall_visual">
+          <pose>-4 0 1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.2 8 2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Office Desk 1 -->
+    <include>
+      <name>desk_1</name>
+      <pose>-2.5 2.5 0 0 0 0</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 1 -->
+    <include>
+      <name>chair_1</name>
+      <pose>-2.5 1.8 0 0 0 0</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+    <!-- Office Desk 2 -->
+    <include>
+      <name>desk_2</name>
+      <pose>2.5 2.5 0 0 0 3.14159</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 2 -->
+    <include>
+      <name>chair_2</name>
+      <pose>2.5 3.2 0 0 0 3.14159</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+    <!-- Office Desk 3 -->
+    <include>
+      <name>desk_3</name>
+      <pose>-2.5 -2.5 0 0 0 0</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 3 -->
+    <include>
+      <name>chair_3</name>
+      <pose>-2.5 -1.8 0 0 0 0</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+    <!-- Office Desk 4 -->
+    <include>
+      <name>desk_4</name>
+      <pose>2.5 -2.5 0 0 0 3.14159</pose>
+      <uri>model://Office Desk</uri>
+    </include>
+
+    <!-- Office Chair 4 -->
+    <include>
+      <name>chair_4</name>
+      <pose>2.5 -1.8 0 0 0 3.14159</pose>
+      <uri>model://Office Chair</uri>
+    </include>
+
+
+
+    <!-- Trash Can -->
+    <include>
+      <name>trash_can_1</name>
+      <pose>-3.2 3.2 0 0 0 0</pose>
+      <uri>model://first_2015_trash_can</uri>
+    </include>
+
+    <!-- Joe Actor -->
+    <include>
+      <name>anne</name>
+      <pose>3.5 3.5 -0.7 0 0 0</pose>
+      <uri>model://anne</uri>
+    </include>
+
+  </world>
+</sdf>
